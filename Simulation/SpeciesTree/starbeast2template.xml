@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='StarBeast2' beautistatus='noAutoSetClockRate' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="starbeast2 v0.13.5" version="2.4">
+
+
+insert_sequences
+
+<map name="Uniform" >beast.math.distributions.Uniform</map>
+<map name="Exponential" >beast.math.distributions.Exponential</map>
+<map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
+<map name="Normal" >beast.math.distributions.Normal</map>
+<map name="Beta" >beast.math.distributions.Beta</map>
+<map name="Gamma" >beast.math.distributions.Gamma</map>
+<map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
+<map name="prior" >beast.math.distributions.Prior</map>
+<map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
+<map name="OneOnX" >beast.math.distributions.OneOnX</map>
+
+
+<run id="mcmc" spec="MCMC" chainLength="10000000" storeEvery="5000">
+    <state id="state" storeEvery="5000">
+        <stateNode id="Tree.t:Species" spec="starbeast2.SpeciesTree">
+            <taxonset id="taxonsuperset" spec="TaxonSet">
+                <taxon id="A" spec="TaxonSet">
+                    <taxon id="a1" spec="Taxon"/>
+                    <taxon id="a2" spec="Taxon"/>
+                </taxon>
+                <taxon id="B" spec="TaxonSet">
+                    <taxon id="b1" spec="Taxon"/>
+                    <taxon id="b2" spec="Taxon"/>
+                </taxon>
+                <taxon id="C" spec="TaxonSet">
+                    <taxon id="c1" spec="Taxon"/>
+                    <taxon id="c2" spec="Taxon"/>
+                </taxon>
+                <taxon id="D" spec="TaxonSet">
+                    <taxon id="d1" spec="Taxon"/>
+                    <taxon id="d2" spec="Taxon"/>
+                </taxon>
+            </taxonset>
+        </stateNode>
+        <parameter id="speciationRate.t:Species" lower="0.0" name="stateNode">1.0</parameter>
+        <tree id="Tree.t:47" name="stateNode">
+            <taxonset id="TaxonSet.47" spec="TaxonSet">
+                <alignment idref="47"/>
+            </taxonset>
+        </tree>
+        <tree id="Tree.t:29" name="stateNode">
+            <taxonset id="TaxonSet.29" spec="TaxonSet">
+                <alignment idref="29"/>
+            </taxonset>
+        </tree>
+        <tree id="Tree.t:26" name="stateNode">
+            <taxonset id="TaxonSet.26" spec="TaxonSet">
+                <alignment idref="26"/>
+            </taxonset>
+        </tree>
+        <parameter id="constPopSizes.Species" lower="0.0" name="stateNode">1.0</parameter>
+        <parameter id="constPopMean.Species" lower="0.0" name="stateNode">1.0</parameter>
+        <parameter id="kappa.s:26" lower="0.0" name="stateNode">2.0</parameter>
+        <parameter id="freqParameter.s:26" dimension="4" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
+    </state>
+
+    <init id="SBI" spec="starbeast2.StarBeastInitializer" birthRate="@speciationRate.t:Species" estimate="false" speciesTree="@Tree.t:Species">
+        <geneTree idref="Tree.t:47"/>
+        <geneTree idref="Tree.t:29"/>
+        <geneTree idref="Tree.t:26"/>
+        <populationModel id="popModelBridge.Species" spec="starbeast2.PassthroughModel">
+            <childModel id="constPopModel.Species" spec="starbeast2.ConstantPopulations" populationSizes="@constPopSizes.Species" speciesTree="@Tree.t:Species"/>
+        </populationModel>
+    </init>
+
+    <distribution id="posterior" spec="util.CompoundDistribution">
+        <distribution id="speciescoalescent" spec="starbeast2.MultispeciesCoalescent">
+            <distribution id="geneTree.t:26" spec="starbeast2.GeneTree" populationModel="@popModelBridge.Species" speciesTree="@Tree.t:Species" tree="@Tree.t:26"/>
+            <distribution id="geneTree.t:29" spec="starbeast2.GeneTree" populationModel="@popModelBridge.Species" speciesTree="@Tree.t:Species" tree="@Tree.t:29"/>
+            <distribution id="geneTree.t:47" spec="starbeast2.GeneTree" populationModel="@popModelBridge.Species" speciesTree="@Tree.t:Species" tree="@Tree.t:47"/>
+        </distribution>
+        <distribution id="prior" spec="util.CompoundDistribution">
+            <distribution id="YuleModel.t:Species" spec="beast.evolution.speciation.YuleModel" birthDiffRate="@speciationRate.t:Species" tree="@Tree.t:Species"/>
+            <prior id="constPopMeanPrior.Species" name="distribution" x="@constPopMean.Species">
+                <OneOnX id="OneOnX" name="distr"/>
+            </prior>
+            <prior id="constPopSizesPrior.Species" name="distribution" x="@constPopSizes.Species">
+                <Gamma id="Gamma" beta="@constPopMean.Species" mode="ShapeMean" name="distr">
+                    <parameter id="constPopShape.Species" estimate="false" lower="0.0" name="alpha">2.0</parameter>
+                </Gamma>
+            </prior>
+            <prior id="KappaPrior.s:26" name="distribution" x="@kappa.s:26">
+                <LogNormal id="LogNormalDistributionModel.3" name="distr">
+                    <parameter id="RealParameter.0" estimate="false" name="M">1.0</parameter>
+                    <parameter id="RealParameter.1" estimate="false" name="S">1.25</parameter>
+                </LogNormal>
+            </prior>
+            <prior id="speciationRatePrior.t:Species" name="distribution" x="@speciationRate.t:Species">
+                <Exponential id="Exponential.3" name="distr">
+                    <parameter id="RealParameter.2" estimate="false" name="mean">2.0</parameter>
+                </Exponential>
+            </prior>
+        </distribution>
+        <distribution id="likelihood" spec="util.CompoundDistribution">
+            <distribution id="treeLikelihood.26" spec="TreeLikelihood" data="@26" tree="@Tree.t:26">
+                <siteModel id="SiteModel.s:26" spec="SiteModel">
+                    <parameter id="mutationRate.s:26" estimate="false" name="mutationRate">1.0</parameter>
+                    <parameter id="gammaShape.s:26" estimate="false" name="shape">1.0</parameter>
+                    <parameter id="proportionInvariant.s:26" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0">0.0</parameter>
+                    <substModel id="hky.s:26" spec="HKY" kappa="@kappa.s:26">
+                        <frequencies id="estimatedFreqs.s:26" spec="Frequencies" frequencies="@freqParameter.s:26"/>
+                    </substModel>
+                </siteModel>
+                <branchRateModel id="StrictClock.c:26" spec="beast.evolution.branchratemodel.StrictClockModel">
+                    <parameter id="strictClockRate.c:26" estimate="false" lower="0.0" name="clock.rate">0.01</parameter>
+                </branchRateModel>
+            </distribution>
+            <distribution id="treeLikelihood.29" spec="TreeLikelihood" branchRateModel="@StrictClock.c:26" data="@29" siteModel="@SiteModel.s:26" tree="@Tree.t:29"/>
+            <distribution id="treeLikelihood.47" spec="TreeLikelihood" branchRateModel="@StrictClock.c:26" data="@47" siteModel="@SiteModel.s:26" tree="@Tree.t:47"/>
+        </distribution>
+    </distribution>
+
+    <operator id="Reheight.t:Species" spec="starbeast2.NodeReheight2" taxonset="@taxonsuperset" tree="@Tree.t:Species" weight="75.0">
+        <geneTree idref="geneTree.t:47"/>
+        <geneTree idref="geneTree.t:29"/>
+        <geneTree idref="geneTree.t:26"/>
+    </operator>
+
+    <operator id="coordinatedUniform.t:Species" spec="starbeast2.CoordinatedUniform" speciesTree="@Tree.t:Species" weight="15.0">
+        <geneTree idref="Tree.t:47"/>
+        <geneTree idref="Tree.t:29"/>
+        <geneTree idref="Tree.t:26"/>
+    </operator>
+
+    <operator id="coordinatedExponential.t:Species" spec="starbeast2.CoordinatedExponential" speciesTree="@Tree.t:Species" weight="15.0">
+        <geneTree idref="Tree.t:47"/>
+        <geneTree idref="Tree.t:29"/>
+        <geneTree idref="Tree.t:26"/>
+    </operator>
+
+    <operator id="TreeScaler.t:Species" spec="ScaleOperator" scaleFactor="0.95" tree="@Tree.t:Species" weight="3.0"/>
+    <operator id="TreeRootScaler.t:Species" spec="ScaleOperator" rootOnly="true" scaleFactor="0.7" tree="@Tree.t:Species" weight="3.0"/>
+    <operator id="UniformOperator.t:Species" spec="Uniform" tree="@Tree.t:Species" weight="15.0"/>
+    <operator id="SubtreeSlide.t:Species" spec="SubtreeSlide" size="0.002" tree="@Tree.t:Species" weight="15.0"/>
+    <operator id="Narrow.t:Species" spec="Exchange" tree="@Tree.t:Species" weight="15.0"/>
+    <operator id="Wide.t:Species" spec="Exchange" isNarrow="false" tree="@Tree.t:Species" weight="15.0"/>
+    <operator id="WilsonBalding.t:Species" spec="WilsonBalding" tree="@Tree.t:Species" weight="15.0"/>
+    
+    <operator id="updownAll:Species" spec="UpDownOperator" scaleFactor="0.75" weight="6.0">
+        <up idref="speciationRate.t:Species"/>
+        <down idref="Tree.t:Species"/>
+        <down idref="Tree.t:47"/>
+        <down idref="Tree.t:29"/>
+        <down idref="Tree.t:26"/>
+        <down idref="constPopSizes.Species"/>
+        <down idref="constPopMean.Species"/>
+    </operator>
+
+    <operator id="speciationRateScale.t:Species" spec="ScaleOperator" parameter="@speciationRate.t:Species" scaleFactor="0.5" weight="1.0"/>
+
+    <operator id="clockUpDownOperator.c:47" spec="UpDownOperator" scaleFactor="0.95" weight="3.0">
+        <down idref="Tree.t:47"/>
+    </operator>
+
+    <operator id="TreeScaler.t:47" spec="ScaleOperator" scaleFactor="0.95" tree="@Tree.t:47" weight="3.0"/>
+
+    <operator id="TreeRootScaler.t:47" spec="ScaleOperator" rootOnly="true" scaleFactor="0.7" tree="@Tree.t:47" weight="3.0"/>
+
+    <operator id="UniformOperator.t:47" spec="Uniform" tree="@Tree.t:47" weight="15.0"/>
+
+    <operator id="SubtreeSlide.t:47" spec="SubtreeSlide" size="0.002" tree="@Tree.t:47" weight="15.0"/>
+
+    <operator id="Narrow.t:47" spec="Exchange" tree="@Tree.t:47" weight="15.0"/>
+
+    <operator id="Wide.t:47" spec="Exchange" isNarrow="false" tree="@Tree.t:47" weight="15.0"/>
+
+    <operator id="WilsonBalding.t:47" spec="WilsonBalding" tree="@Tree.t:47" weight="15.0"/>
+
+    <operator id="clockUpDownOperator.c:29" spec="UpDownOperator" scaleFactor="0.95" weight="3.0">
+        <down idref="Tree.t:29"/>
+    </operator>
+
+    <operator id="TreeScaler.t:29" spec="ScaleOperator" scaleFactor="0.95" tree="@Tree.t:29" weight="3.0"/>
+
+    <operator id="TreeRootScaler.t:29" spec="ScaleOperator" rootOnly="true" scaleFactor="0.7" tree="@Tree.t:29" weight="3.0"/>
+
+    <operator id="UniformOperator.t:29" spec="Uniform" tree="@Tree.t:29" weight="15.0"/>
+
+    <operator id="SubtreeSlide.t:29" spec="SubtreeSlide" size="0.002" tree="@Tree.t:29" weight="15.0"/>
+
+    <operator id="Narrow.t:29" spec="Exchange" tree="@Tree.t:29" weight="15.0"/>
+
+    <operator id="Wide.t:29" spec="Exchange" isNarrow="false" tree="@Tree.t:29" weight="15.0"/>
+
+    <operator id="WilsonBalding.t:29" spec="WilsonBalding" tree="@Tree.t:29" weight="15.0"/>
+
+    <operator id="clockUpDownOperator.c:26" spec="UpDownOperator" scaleFactor="0.95" weight="3.0">
+        <down idref="Tree.t:26"/>
+    </operator>
+
+    <operator id="TreeScaler.t:26" spec="ScaleOperator" scaleFactor="0.95" tree="@Tree.t:26" weight="3.0"/>
+
+    <operator id="TreeRootScaler.t:26" spec="ScaleOperator" rootOnly="true" scaleFactor="0.7" tree="@Tree.t:26" weight="3.0"/>
+
+    <operator id="UniformOperator.t:26" spec="Uniform" tree="@Tree.t:26" weight="15.0"/>
+
+    <operator id="SubtreeSlide.t:26" spec="SubtreeSlide" size="0.002" tree="@Tree.t:26" weight="15.0"/>
+
+    <operator id="Narrow.t:26" spec="Exchange" tree="@Tree.t:26" weight="15.0"/>
+
+    <operator id="Wide.t:26" spec="Exchange" isNarrow="false" tree="@Tree.t:26" weight="15.0"/>
+
+    <operator id="WilsonBalding.t:26" spec="WilsonBalding" tree="@Tree.t:26" weight="15.0"/>
+
+    <operator id="constPopSizesSwap.Species" spec="SwapOperator" parameter="@constPopSizes.Species" weight="3.0"/>
+
+    <operator id="constPopSizesScale.Species" spec="ScaleOperator" parameter="@constPopSizes.Species" scaleFactor="0.5" weight="3.0"/>
+
+    <operator id="constPopMeanScale.Species" spec="ScaleOperator" parameter="@constPopMean.Species" scaleFactor="0.75" weight="1.0"/>
+
+    <operator id="KappaScaler.s:26" spec="ScaleOperator" parameter="@kappa.s:26" scaleFactor="0.75" weight="1.0"/>
+
+    <operator id="FrequenciesExchanger.s:26" spec="DeltaExchangeOperator" delta="0.2" weight="1.5">
+        <parameter idref="freqParameter.s:26"/>
+    </operator>
+
+    <logger id="tracelog" fileName="starbeast.log" logEvery="5000" model="@posterior" sort="smart">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+        <log idref="speciescoalescent"/>
+        <log idref="speciationRate.t:Species"/>
+        <log idref="YuleModel.t:Species"/>
+        <log id="TreeHeight.Species" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:Species"/>
+        <log id="TreeLength.Species" spec="starbeast2.TreeLengthLogger" tree="@Tree.t:Species"/>
+        <log idref="treeLikelihood.47"/>
+        <log id="TreeHeight.t:47" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:47"/>
+        <log idref="treeLikelihood.29"/>
+        <log id="TreeHeight.t:29" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:29"/>
+        <log idref="treeLikelihood.26"/>
+        <log id="TreeHeight.t:26" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:26"/>
+        <log idref="constPopMean.Species"/>
+        <log idref="kappa.s:26"/>
+        <log idref="freqParameter.s:26"/>
+    </logger>
+
+    <logger id="speciesTreeLogger" fileName="species.trees" logEvery="5000" mode="tree">
+        <log id="SpeciesTreeLoggerX" spec="starbeast2.SpeciesTreeLogger" populationmodel="@constPopModel.Species" speciesTree="@Tree.t:Species"/>
+    </logger>
+
+    <logger id="screenlog" logEvery="5000" model="@posterior">
+        <log idref="posterior"/>
+        <log id="ESS.0" spec="util.ESS" arg="@posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+    </logger>
+
+    <logger id="treelog.t:47" fileName="$(tree).trees" logEvery="5000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:47" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:47"/>
+    </logger>
+
+    <logger id="treelog.t:29" fileName="$(tree).trees" logEvery="5000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:29" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:29"/>
+    </logger>
+
+    <logger id="treelog.t:26" fileName="$(tree).trees" logEvery="5000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:26" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:26"/>
+    </logger>
+
+</run>
+
+</beast>

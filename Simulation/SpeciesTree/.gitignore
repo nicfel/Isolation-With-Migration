@@ -1,0 +1,9 @@
+# Ignore everything in this directory
+/BPP/
+/IM/
+/log/
+/Sequences/
+/StarBeast/
+/StarBeastLog/
+/untitled folder/
+*.tsv
