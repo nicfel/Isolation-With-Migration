@@ -8,3 +8,6 @@ We here present a new approach based on a recently introduced structured coalesc
 
 The source code of the approximate isolation-with-migration model in [Beast2](https://github.com/CompEvol/beast2) is part of the package [StarBeast2](https://github.com/genomescale/starbeast2)
 
+## Jar
+
+A compiled jar file **AIM.jar** is given in the Software folder and can be run as a normal BEAST2 file using the same command line input
